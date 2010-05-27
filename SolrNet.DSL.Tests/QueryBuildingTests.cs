@@ -20,6 +20,11 @@ using SolrNet.Impl.FieldSerializers;
 using SolrNet.Impl.QuerySerializers;
 
 namespace SolrNet.DSL.Tests {
+    public class SolrDocument
+    {
+        public string Name { get; set; }
+        public decimal Price { get; set; }
+    }
     [TestFixture]
     public class QueryBuildingTests {
 
@@ -42,9 +47,23 @@ namespace SolrNet.DSL.Tests {
         }
 
         [Test]
+        public void StronglyTypedFieldValue()
+        {
+            var q = Query.Field<SolrDocument>(sd => sd.Name).Is("solr");
+            Assert.AreEqual("Price:solr", Serialize(q));
+        }
+
+        [Test]
         public void FieldValueDecimal() {
             var q = Query.Field("price").Is(400);
             Assert.AreEqual("price:400", Serialize(q));
+        }
+
+        [Test]
+        public void StronglyTypedFieldValueDecimal()
+        {
+            var q = Query.Field<SolrDocument>(sd => sd.Price).Is(400);
+            Assert.AreEqual("Price:400", Serialize(q));
         }
 
         [Test]
@@ -57,6 +76,13 @@ namespace SolrNet.DSL.Tests {
         public void Range() {
             var q = Query.Field("price").From(10).To(20);
             Assert.AreEqual("price:[10 TO 20]", Serialize(q));
+        }
+
+        [Test]
+        public void StronglyTypedRange()
+        {
+            var q = Query.Field<SolrDocument>(sd => sd.Price).From(10).To(20);
+            Assert.AreEqual("Price:[10 TO 20]", Serialize(q));
         }
 
         [Test]

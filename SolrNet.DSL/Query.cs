@@ -14,7 +14,10 @@
 // limitations under the License.
 #endregion
 
+using System;
+using System.Linq.Expressions;
 using SolrNet.DSL.Impl;
+using System.Linq;
 
 namespace SolrNet.DSL {
     public static class Query {
@@ -24,6 +27,13 @@ namespace SolrNet.DSL {
 
         public static FieldDefinition Field(string field) {
             return new FieldDefinition(field);
+        }
+        public static FieldDefinition Field<T>(Expression<Func<T, object>> field)
+        {
+            var body = (UnaryExpression) field.Body;
+            var operand = (MemberExpression) body.Operand;
+
+            return new FieldDefinition(operand.Member.Name);
         }
     }
 }
