@@ -63,6 +63,7 @@
     <Compile Include="Impl\IDSLQueryBy.cs" />
     <Compile Include="Impl\IDSLQueryRange.cs" />
     <Compile Include="Impl\IDSLRun.cs" />
+    <Compile Include="Impl\TypedFieldDefinition.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Query.cs" />
     <Compile Include="Impl\RangeDefinition.cs" />

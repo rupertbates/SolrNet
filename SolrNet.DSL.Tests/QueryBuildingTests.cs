@@ -16,14 +16,21 @@
 
 using System;
 using MbUnit.Framework;
+using Microsoft.Practices.ServiceLocation;
+using SolrNet.Commands.Parameters;
 using SolrNet.Impl.FieldSerializers;
 using SolrNet.Impl.QuerySerializers;
+using SolrNet.Attributes;
 
 namespace SolrNet.DSL.Tests {
     public class SolrDocument
     {
-        public string Name { get; set; }
-        public decimal Price { get; set; }
+        [SolrUniqueKey("id")]
+        public string Id { get; set; }
+        [SolrField("inStock")]
+        public bool InStock { get; set; }
+        [SolrField("price")]
+        public float Price { get; set; }
     }
     [TestFixture]
     public class QueryBuildingTests {
@@ -32,7 +39,10 @@ namespace SolrNet.DSL.Tests {
             var serializer = new DefaultQuerySerializer(new DefaultFieldSerializer());
             return serializer.Serialize(q);
         }
-
+        public QueryBuildingTests()
+        {
+            Startup.InitContainer();
+        }
 
         [Test]
         public void Simple() {
@@ -49,21 +59,48 @@ namespace SolrNet.DSL.Tests {
         [Test]
         public void StronglyTypedFieldValue()
         {
-            var q = Query.Field<SolrDocument>(sd => sd.Name).Is("solr");
-            Assert.AreEqual("Price:solr", Serialize(q));
+            var q = Query.Field<SolrDocument>(sd => sd.Id).Is("SP2514N");
+            Assert.AreEqual("id:SP2514N", Serialize(q));
+        }
+        [Test]
+        public void StronglyTypedFieldValueFloat()
+        {   
+            var q = Query.Field<SolrDocument>(sd => sd.Id).Is("SP2514N");
+            Assert.AreEqual("id:SP2514N", Serialize(q));
+        }
+        [Test]
+        public void StronglyTypedRange()
+        {
+            var q = Query.Field<SolrDocument>(sd => sd.Price).From(10).To(20);
+            Assert.AreEqual("price:[10 TO 20]", Serialize(q));
+        }
+        [Test]
+        public void StronglyTypedFieldValueDecimalWithTypedFieldDefinition()
+        {
+
+            var q = Query.Field<SolrDocument, bool>(sd => sd.InStock).Is(true);
+
+            Assert.AreEqual("inStock:True", Serialize(q));
+        }
+        [Test]
+        [Ignore]
+        public void StronglyTypedFieldValueDecimalWithTypedField()
+        {
+            //try an actual test against the example Solr schema
+            Startup.Init<SolrDocument>("http://localhost:8983/solr");
+
+            var solr = ServiceLocator.Current.GetInstance<ISolrOperations<SolrDocument>>();
+
+            var results = solr.Query(Query.Field<SolrDocument, bool>(sd => sd.InStock).Is(true)
+                && Query.Field<SolrDocument, float>(sd => sd.Price).From(0).To(100000), new QueryOptions { Rows = 10 });
+
+            Assert.GreaterThan(results.NumFound, 0);
         }
 
         [Test]
         public void FieldValueDecimal() {
             var q = Query.Field("price").Is(400);
             Assert.AreEqual("price:400", Serialize(q));
-        }
-
-        [Test]
-        public void StronglyTypedFieldValueDecimal()
-        {
-            var q = Query.Field<SolrDocument>(sd => sd.Price).Is(400);
-            Assert.AreEqual("Price:400", Serialize(q));
         }
 
         [Test]
@@ -78,12 +115,6 @@ namespace SolrNet.DSL.Tests {
             Assert.AreEqual("price:[10 TO 20]", Serialize(q));
         }
 
-        [Test]
-        public void StronglyTypedRange()
-        {
-            var q = Query.Field<SolrDocument>(sd => sd.Price).From(10).To(20);
-            Assert.AreEqual("Price:[10 TO 20]", Serialize(q));
-        }
 
         [Test]
         public void InList() {
