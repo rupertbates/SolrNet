@@ -30,8 +30,13 @@ namespace SolrNet.DSL {
         }
         public static FieldDefinition Field<T>(Expression<Func<T, object>> field)
         {
-            var body = (UnaryExpression) field.Body;
-            var operand = (MemberExpression) body.Operand;
+            MemberExpression operand;
+            if (field.Body is MemberExpression)
+                operand = (MemberExpression)field.Body;
+            else if (field.Body is UnaryExpression)
+                operand = (MemberExpression) ((UnaryExpression) field.Body).Operand;
+            else 
+                throw new ArgumentException("parameter field must be of type MemberExpression or UnaryExpression");
 
             return new FieldDefinition(operand.Member.Name);
         }
