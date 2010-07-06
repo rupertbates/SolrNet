@@ -23,8 +23,9 @@ namespace SolrNet.DSL.Impl
         public RangeDefinition<T> From(T from) {
             return new RangeDefinition<T>(fieldName, from);
         }
-
-        public SolrQueryInList In(params T[] values) {
+        //The In clause needs a new type because we are interested in the type of 
+        //the list elements, not the list itself
+        public SolrQueryInList In<U>(params U[] values) {
             return new SolrQueryInList(fieldName, Func.Select(values, v => Convert.ToString(v)));
         }
 

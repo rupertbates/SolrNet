@@ -15,6 +15,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using MbUnit.Framework;
 using Microsoft.Practices.ServiceLocation;
 using SolrNet.Commands.Parameters;
@@ -31,6 +32,8 @@ namespace SolrNet.DSL.Tests {
         public bool InStock { get; set; }
         [SolrField("price")]
         public float Price { get; set; }
+        [SolrField("categories")]
+        public string[] Categories { get; set; }
     }
     [TestFixture]
     public class QueryBuildingTests {
@@ -81,6 +84,15 @@ namespace SolrNet.DSL.Tests {
             var q = Query.Field<SolrDocument, bool>(sd => sd.InStock).Is(true);
 
             Assert.AreEqual("inStock:True", Serialize(q));
+        }
+        [Test]
+        public void StronglyTypedFieldValueInClauseWithTypedFieldDefinition()
+        {
+
+            var q = Serialize(Query.Field<SolrDocument, string[]>(sd => sd.Categories).In(new []{"test", "one"}));
+            var r = Serialize(Query.Field<SolrDocument>(sd => sd.Categories).In(new[] {"test", "one"}));
+            Assert.AreEqual(q, r);
+            Assert.AreEqual("(categories:test OR categories:one)", q);
         }
         [Test]
         [Ignore]
